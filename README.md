@@ -63,16 +63,22 @@ Everything is controlled from the menu:
 
 ### Option A — DMG (recommended)
 
-Signed and notarized.
+This fork's releases are ad-hoc signed only (no paid Apple Developer ID), so Gatekeeper blocks the first launch. One-time bypass, either:
+
+- Right-click (or Control-click) Claude Status Bar.app in Applications, choose Open, then Open again in the dialog, or
+- Run `xattr -cr "/Applications/Claude Status Bar.app"` in Terminal.
 
 1. Download the latest `ClaudeStatusBar.dmg` from [Releases](../../releases).
 2. Open it and drag **Claude Status Bar** into Applications.
-3. Launch it once. On first launch it wires up the Claude Code hooks for you automatically.
-4. Start a new Claude Code session, the icon appears whenever Claude Code is running.
+3. Right-click → Open (see above) to get past Gatekeeper the first time.
+4. Launch it once. On first launch it wires up the Claude Code hooks for you automatically.
+5. Start a new Claude Code session, the icon appears whenever Claude Code is running.
 
 ### Updating
 
 Download the latest DMG and drag it into Applications (choose **Replace**). That's it: it refreshes its own hooks the next time it starts up (on a version change it re-runs its installer automatically), so there's nothing to run by hand. Your next Claude Code session picks them up.
+
+Each build's ad-hoc signature is unique, so the Gatekeeper bypass above (right-click → Open, or `xattr -cr`) is needed again after every update, not just the first install.
 
 > [!IMPORTANT]
 > **Updated mid-session?** Sessions already open won't show up until they do something (send a prompt) or you start a new `claude` session.
