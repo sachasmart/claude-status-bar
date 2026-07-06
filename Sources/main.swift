@@ -251,8 +251,8 @@ final class StatusController: NSObject, NSMenuDelegate {
     let frames: [NSImage] = StatusController.loadFrames()
     let spriteFPS: Double = 9 // tune: 8 frames per loop -> ~0.9s/cycle
 
-    enum AnimStyle: String { case web, code, crab }
-    var animStyle: AnimStyle = .web
+    enum AnimStyle: String { case web, code, crab, traffic }
+    var animStyle: AnimStyle = .traffic
     var showTimer = false
     var iconSystem = false // false = brand Orange; true = adaptive black/white (template image)
     var playCompletionSound = false // chime when a turn longer than ~5 min finishes
@@ -308,6 +308,7 @@ final class StatusController: NSObject, NSMenuDelegate {
         case .web: return spriteFPS
         case .code: return Double(codeGlyphs.count * codeSub) / codeCycle
         case .crab: return crabFPS
+        case .traffic: return 1 // unused: traffic never runs the frame timer, it's state-driven
         }
     }
     var frameCount: Int {
@@ -315,6 +316,7 @@ final class StatusController: NSObject, NSMenuDelegate {
         case .web: return max(1, frames.count)
         case .code: return codeGlyphs.count * codeSub
         case .crab: return max(1, crabFrames.count)
+        case .traffic: return 1
         }
     }
 
@@ -451,6 +453,7 @@ final class StatusController: NSObject, NSMenuDelegate {
     }
 
     func spinTick() {
+        guard animStyle != .traffic else { return } // traffic lamps are static per state, nothing to spin
         spinAngle += 5   // 30fps * 5° = 150°/s ≈ 0.42 rev/s, a calm spin
         guard let img = rotatedSpinner(spinAngle) else { return }
         let now = Date().timeIntervalSince1970
@@ -543,7 +546,7 @@ final class StatusController: NSObject, NSMenuDelegate {
         let settingsSub = NSMenu()
 
         settingsSub.addItem(header("Animation Style"))
-        for (style, name) in [(AnimStyle.web, "Claude Spark"), (AnimStyle.code, "Claude Code"), (AnimStyle.crab, "Crab Walking")] {
+        for (style, name) in [(AnimStyle.web, "Claude Spark"), (AnimStyle.code, "Claude Code"), (AnimStyle.crab, "Crab Walking"), (AnimStyle.traffic, "Traffic Light")] {
             let it = NSMenuItem(title: name, action: #selector(chooseStyle(_:)), keyEquivalent: "")
             it.target = self
             it.representedObject = style.rawValue
@@ -585,8 +588,13 @@ final class StatusController: NSObject, NSMenuDelegate {
         menu.addItem(q)
     }
 
+    // Called via selector (not NSMenuItem.sectionHeader directly) so this still compiles against
+    // the macOS 13 SDK; responds(to:) keeps it a no-op there and on any pre-14 runtime.
     func header(_ title: String) -> NSMenuItem {
-        if #available(macOS 14.0, *) { return NSMenuItem.sectionHeader(title: title) }
+        let sel = Selector(("sectionHeaderWithTitle:"))
+        if NSMenuItem.responds(to: sel), let item = NSMenuItem.perform(sel, with: title)?.takeUnretainedValue() as? NSMenuItem {
+            return item
+        }
         let it = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         it.isEnabled = false
         return it
@@ -720,6 +728,7 @@ final class StatusController: NSObject, NSMenuDelegate {
     }
 
     func sessionSymbol(_ s: Session, eff: String) -> NSImage? {
+        if animStyle == .traffic { return trafficLightIcon(eff: eff, height: spinnerBase?.size.width ?? 15) }
         switch eff {
         case "permission":       return symbolImage("exclamationmark.circle.fill", tint: amber)
         case "thinking", "tool": return rotatedSpinner(spinAngle)
@@ -950,6 +959,12 @@ final class StatusController: NSObject, NSMenuDelegate {
         statusItem.button?.toolTip = lead.map(sessionMenuLine)  // names repo + surface + state on hover
 
         guard let lead = lead else { renderResting(); return }
+        if animStyle == .traffic {
+            let eff = lead.eff
+            let startedAt = (eff == "thinking" || eff == "tool") ? lead.startedAt : 0
+            renderTraffic(eff: eff, label: statusText(lead, eff: eff), startedAt: startedAt)
+            return
+        }
         switch lead.eff {
         case "permission":
             render(label: statusText(lead, eff: lead.eff), color: amber, animate: false, startedAt: 0, dot: true)
@@ -960,7 +975,21 @@ final class StatusController: NSObject, NSMenuDelegate {
         }
     }
 
-    func renderResting() { render(label: "", color: iconColor, animate: false, startedAt: 0) }
+    func renderResting() {
+        if animStyle == .traffic { renderTraffic(eff: "idle", label: "", startedAt: 0); return }
+        render(label: "", color: iconColor, animate: false, startedAt: 0)
+    }
+
+    func renderTraffic(eff: String, label: String, startedAt: Double) {
+        guard let button = statusItem.button else { return }
+        animTimer?.invalidate(); animTimer = nil
+        button.contentTintColor = nil
+        activeBase = label
+        activeColor = nil
+        self.startedAt = startedAt
+        button.image = trafficLightIcon(eff: eff)
+        applyTitle()
+    }
 
     // Per-session effective state with two recovery nets: an absolute age cap, plus the transcript
     // "interrupted by user" marker (Esc / denied permission fire no hook, freezing the file). "done"
@@ -1106,6 +1135,7 @@ final class StatusController: NSObject, NSMenuDelegate {
     func iconImage(color: NSColor?, frame: Int) -> NSImage {
         if animStyle == .web { return tint(frames, color: color, frame: frame) }
         if animStyle == .crab { return crabIcon(color: color, frame: frame) }
+        if animStyle == .traffic { return trafficLightIcon(eff: "thinking") }
         let i = (frame / codeSub) % codeGlyphs.count
         let local = (CGFloat(frame % codeSub) + 0.5) / CGFloat(codeSub) // 0…1 within this glyph
         // Scale envelope per glyph: rise, hold at peak, fall, so each lands before the swap.
@@ -1170,6 +1200,7 @@ final class StatusController: NSObject, NSMenuDelegate {
     let logoSet: [NSImage] = Data(base64Encoded: claudeLogoPNG).flatMap(NSImage.init(data:)).map { [$0] } ?? []
     func restingIcon(color: NSColor?) -> NSImage {
         if animStyle == .crab { return crabIcon(color: color, frame: 0) }
+        if animStyle == .traffic { return trafficLightIcon(eff: "idle") }
         return tint(logoSet.isEmpty ? frames : logoSet, color: color, frame: 0)
     }
 
