@@ -1,8 +1,10 @@
-<img width="672" height="80" alt="Screen Recording 2026-06-23 at 3 57 47 AM 2" src="https://github.com/user-attachments/assets/97876ac9-cd4f-431b-873a-93220de5bd99" />
-<br><br>
+Fork of [Claude Status Bar](https://github.com/m1ckc3s/claude-status-bar/)
 
-<a href="https://github.com/m1ckc3s/claude-status-bar/releases/latest/download/ClaudeStatusBar.dmg"><img src="assets/download.png" alt="Download ClaudeStatusBar.dmg for macOS" width="260"></a>
-<br>
+- for personal use and interest in adding a traffic light feature:
+
+<a href="https://github.com/sachasmart/claude-status-bar"><img src="assets/traffic.png" alt="Download ClaudeStatusBar.dmg for macOS" width="260"></a>
+
+---
 
 ## Claude Status Bar
 
@@ -15,7 +17,7 @@ A tiny macOS menu bar app that shows **Claude Code's live status**: an animated 
 > [!IMPORTANT]
 > **Multi-session support.** When several Claude Code sessions run at once (multiple terminals, or
 > a terminal plus the desktop app), the menu bar surfaces the highest-priority one: a session
-> awaiting your permission is never hidden behind one that's thinking. The dropdown lists 
+> awaiting your permission is never hidden behind one that's thinking. The dropdown lists
 > every live session. Click a session to jump to it: desktop sessions focus
 > the Claude app, terminal sessions bring their terminal app to the front.
 > Precise per-tab focus is in progress: **[issue #19 →](https://github.com/m1ckc3s/claude-status-bar/issues/19)**.
@@ -43,13 +45,13 @@ Everything is controlled from the menu:
 
 ## Where it works
 
-| Surface | Tracked? |
-|---|---|
-| Claude Code CLI (terminal) | ✅ |
-| Claude Code Desktop — **Code** tab | ✅ |
-| Cursor (Claude Code extension) | ✅ |
-| Claude Desktop — **Chat** tab | ❌ |
-| **Cowork** | ❌ |
+| Surface                            | Tracked? |
+| ---------------------------------- | -------- |
+| Claude Code CLI (terminal)         | ✅       |
+| Claude Code Desktop — **Code** tab | ✅       |
+| Cursor (Claude Code extension)     | ✅       |
+| Claude Desktop — **Chat** tab      | ❌       |
+| **Cowork**                         | ❌       |
 
 ## Requirements
 
@@ -59,7 +61,7 @@ Everything is controlled from the menu:
 
 ## Install
 
-### Option A — DMG (recommended) 
+### Option A — DMG (recommended)
 
 Signed and notarized.
 
@@ -101,6 +103,7 @@ Icon quitting right after you open it, not showing, or not moving in Cursor? See
 ```bash
 node "/Applications/ClaudeStatusBar.app/Contents/Resources/uninstall.js"   # removes only our hooks
 ```
+
 Then drag the app to the Trash.
 
 ## Acknowledgements
