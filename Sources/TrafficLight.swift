@@ -9,8 +9,8 @@ func trafficLightIcon(eff: String, height: CGFloat = 18) -> NSImage {
     default:                 lit = .systemGreen
     }
     let dark = NSApp.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-    let housing = (dark ? NSColor.white : NSColor.black).withAlphaComponent(0.20)
-    let off = (dark ? NSColor.white : NSColor.black).withAlphaComponent(0.28)
+    let housing = dark ? NSColor.white.withAlphaComponent(0.20) : NSColor.black.withAlphaComponent(0.85)
+    let off = dark ? NSColor.white.withAlphaComponent(0.28) : NSColor.black.withAlphaComponent(0.30)
 
     return NSImage(size: NSSize(width: width, height: height), flipped: false) { rect in
         let housingRect = rect.insetBy(dx: 0.5, dy: 0.5)
